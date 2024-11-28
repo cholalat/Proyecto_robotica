@@ -78,33 +78,38 @@ def detectar_color(low_color, high_color, color_name, img, nombre, color_caja=(0
     return centros
 
 
-
-def start(PID_ang, PID_lin, theta, dist):
-
-
-
+def start(theta, dist):
+    # Se reinicia el PID cada vez que se cambia de modo de juego
+    e_ang = []
+    e_lin = []
     if abs(theta) < 10 and abs(dist) < 20:
+        control_R = 0
+        control_L = 0
         print("Llego")
 
     else:
         # Control angular
-        control_R = PID_ang(theta)
-        control_L = -PID_ang(theta)
+        u_ang, e_ang = pid_controler(mesure=theta, setpoint=0, kp=1.8, ki=0.02, kd=0.1, error= e_ang, dt= 0.5)
+        u_ang = max(-150, min(150, u_ang))
+        
+        control_R =  u_ang
+        control_L = -u_ang
 
         # Corrección lineal en función del ángulo
 
         if np.sqrt(abs(theta)) < 3:
-            control_R += PID_lin(dist)
-            control_L += PID_lin(dist)
+            u_lin, e_lin = pid_controler(mesure=dist, setpoint=20, kp=1.5, ki=0, kd=0, error= e_lin, dt= 0.5)
+            u_lin = max(-150, min(150, u_lin))
+            
+            control_R += u_lin
+            control_L += u_lin
 
         # Ajuste del setpoint de distancia dinámico
-        PID_lin.setpoint = max(5, dist * 0.5)
+        # PID_lin.setpoint = max(5, dist * 0.5)
     
     print("Angulo: " + str(theta))
     print("Distancia: " + str(dist))
     return (control_R, control_L)
-
-
 
 
 def control():
@@ -114,11 +119,12 @@ def control():
 
     output_queue = Queue()
 
-    pid_ang = PID(1.8, 0.02, 0.1, setpoint=0)
-    pid_lin = PID(1.5, 0, 0, setpoint=20)
+    # Comentado por el momento hasta probarlo bien el viernes
+    # pid_ang = PID(1.8, 0.02, 0.1, setpoint=0)
+    # pid_lin = PID(1.5, 0, 0, setpoint=20)
 
-    pid_ang.output_limits = (-150, 150)
-    pid_lin.output_limits = (-150, 150)
+    # pid_ang.output_limits = (-150, 150)
+    # pid_lin.output_limits = (-150, 150)
 
     vid = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
@@ -213,56 +219,67 @@ def control():
 
 
             if modo_de_juego == "pelota":
-                if modo_de_juego_anterior != "pelota":
-                    pid_ang.integral = 0
-                    pid_ang.last_output = None
-                    pid_ang.last_input = None
+                # if modo_de_juego_anterior != "pelota":
+                #     pid_ang.integral = 0
+                #     pid_ang.last_output = None
+                #     pid_ang.last_input = None
 
-                    pid_lin.integral = 0
-                    pid_lin.last_output = None
-                    pid_lin.last_input = None
+                #     pid_lin.integral = 0
+                #     pid_lin.last_output = None
+                #     pid_lin.last_input = None
 
-                r1Ar, r1Al = start(pid_ang, pid_lin, theta_p, dist_p)
+                # r1Ar, r1Al = start(pid_ang, pid_lin, theta_p, dist_p)
+                
+                ### Para reiniciar los PID, se entrega el error vacion (error = []) ###
+                ###       Lo anterior esta incluido en al funcion start()           ###
+                
+                r1Ar, r1Al = start(theta_p, dist_p)
                 cv2.line(img, centro_naranja, centro_amarillo, (0, 0, 0), 2)
 
 
             if modo_de_juego == "arco_m":
-                if modo_de_juego_anterior != "arco_m":
-                    pid_ang.integral = 0 ###################### Crear funcionar para reiniciar el PID######################
-                    pid_ang.last_output = None
-                    pid_ang.last_input = None
+                # if modo_de_juego_anterior != "arco_m":
+                    # pid_ang.integral = 0 ###################### Crear funcionar para reiniciar el PID######################
+                    # pid_ang.last_output = None
+                    # pid_ang.last_input = None
 
-                    pid_lin.integral = 0
-                    pid_lin.last_output = None
-                    pid_lin.last_input = None
-
-                r1Ar, r1Al = start(pid_ang, pid_lin, theta_am, dist_am)
+                    # pid_lin.integral = 0
+                    # pid_lin.last_output = None
+                    # pid_lin.last_input = None
+                    
+                # r1Ar, r1Al = start(pid_ang, pid_lin, theta_am, dist_am)
+                
+                r1Ar, r1Al = start(theta_am, dist_am)
                 cv2.line(img, centro_naranja, centro_arco_morado, (0, 0, 0), 2)
 
             if modo_de_juego == "arco_a":
-                if modo_de_juego_anterior != "arco_a":
-                    pid_ang.integral = 0 ###################### Crear funcionar para reiniciar el PID######################
-                    pid_ang.last_output = None
-                    pid_ang.last_input = None
+                # if modo_de_juego_anterior != "arco_a":
+                #     pid_ang.integral = 0 ###################### Crear funcionar para reiniciar el PID######################
+                #     pid_ang.last_output = None
+                #     pid_ang.last_input = None
 
-                    pid_lin.integral = 0
-                    pid_lin.last_output = None
-                    pid_lin.last_input = None
+                #     pid_lin.integral = 0
+                #     pid_lin.last_output = None
+                #     pid_lin.last_input = None
 
-                r1Ar, r1Al = start(pid_ang, pid_lin, theta_aa, dist_aa)
+                # r1Ar, r1Al = start(pid_ang, pid_lin, theta_aa, dist_aa)
+                
+                r1Ar, r1Al = start(theta_aa, dist_aa)
                 cv2.line(img, centro_naranja, centro_arco_morado, (0, 0, 0), 2)
 
             if modo_de_juego == "centro":
-                if modo_de_juego_anterior != "centro":
-                    pid_ang.integral = 0
-                    pid_ang.last_output = None
-                    pid_ang.last_input = None
+                # if modo_de_juego_anterior != "centro":
+                #     pid_ang.integral = 0
+                #     pid_ang.last_output = None
+                #     pid_ang.last_input = None
 
-                    pid_lin.integral = 0
-                    pid_lin.last_output = None
-                    pid_lin.last_input = None
+                #     pid_lin.integral = 0
+                #     pid_lin.last_output = None
+                #     pid_lin.last_input = None
 
-                r1Ar, r1Al = start(pid_ang, pid_lin, theta_centro, dist_centro)
+                # r1Ar, r1Al = start(pid_ang, pid_lin, theta_centro, dist_centro)
+                
+                r1Ar, r1Al = start(theta_centro, dist_centro)
                 cv2.line(img, centro_naranja, (ancho//2, alto//2), (0, 0, 0), 2)
             
             output_queue.put((r1Ar, r1Al))
@@ -299,7 +316,6 @@ def control():
     ser.close()
 
 
-
 def gestionar_inputs():
     global modo_de_juego
 
@@ -327,6 +343,7 @@ def ball_to_goal():
 
 def kick_ball_to_goal():
     pass
+
 
 def pid_controler(mesure, setpoint=0, kp=1, ki=0, kd=0, dt=0.1, error=[]):
     """
