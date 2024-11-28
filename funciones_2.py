@@ -313,3 +313,40 @@ def gestionar_inputs():
 
         thread2_done.set()
  
+def go_center():
+    pass
+
+def move_to_ball():
+    pass
+
+def move_ball_straight():
+    pass
+
+def ball_to_goal():
+    pass
+
+def kick_ball_to_goal():
+    pass
+
+def pid_controler(mesure, setpoint=0, kp=1, ki=0, kd=0, dt=0.1, error=[]):
+    """
+    Función de control PID, que recibe una variable a controlar (mesure) y un setpoint al que
+    se quiere llegar. En la que los coeficientes (kp, ki, kd) son independientes entre sí.
+    """
+    # Gestion lista de errores
+    error.append(setpoint - mesure)
+    if len(error) > 10:
+        error.pop(0)
+    
+    # Cálculo de las componentes del controlador PID
+    P = kp * error[-1]
+    I = ki * sum(error) * dt
+    if len(error) > 1:
+        D = kd * (error[-1] - error[-2]) / dt
+    else:
+        D = 0
+    
+    # Cálculo de la señal de control
+    u = P + I + D
+    
+    return u, error
