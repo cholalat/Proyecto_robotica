@@ -98,48 +98,6 @@ def detectar_color(low_color, high_color, color_name, img, nombre, color_caja=(0
     return centros
 
 
-# def start(delay):
-
-#     """Función para calcular los valores de r1Ar y r1Al."""
-
-#     # r1Ar: PWM rueda derecha
-#     # r1Al: PWM rueda izquierda
-#     # dit: distancia robot-pelota
-#     # theta: angulo robot-pelota
-#     if theta != None and dist != None:
-#         pid_ang = PID(1, 0.1, 0, setpoint=0)
-#         pid_lin = PID(1, 0.1, 0, setpoint=20)
-
-#         while not exit_flag:
-#             if abs(theta) < 10 and abs(dist) < 20:
-#                 r1Ar = 0
-#                 r1Al = 0
-#                 print("Llego")
-#             else:
-#                 # Control angular
-#                 control_R = pid_ang(theta)
-#                 control_L = -pid_ang(theta)
-
-#                 # Corrección lineal en función del ángulo
-#                 if np.sqrt(abs(theta)) < 3:
-#                     control_R = pid_lin(dist)
-#                     control_L = pid_lin(dist)
-
-#                 # Ajuste del setpoint de distancia dinámico
-#                 pid_lin.setpoint = max(5, dist * 0.5)
-
-#                 # Actualización de la señal PWM
-#                 r1Ar = control_R
-#                 r1Al = control_L
-
-#             # Agregar valores a la cola
-#             output_queue.put((r1Ar, r1Al))
-
-#             print("Angulo: " + str(theta))
-#             print("Distancia: " + str(dist))
-            
-#             time.sleep(delay) #Probar cómo funciona sin el .sleep
-
 
 
 def start():
@@ -160,13 +118,7 @@ def start():
     global output_queue
 
 
-
-	# r1Ar: PWM rueda derecha
-	# r1Al: PWM rueda izquierda
-	# dit: distancia robot-pelota
-	# theta: angulo robot-pelota
-
-    pid_ang_pelota = PID(1.8, 0.02, 0, setpoint=0)
+    pid_ang_pelota = PID(2.3, 0.01, 0, setpoint=0)
     pid_lin_pelota = PID(1.5, 0, 0, setpoint=20)
 
     pid_ang_arco = PID(1.8, 0.02, 0, setpoint=0)
@@ -177,191 +129,59 @@ def start():
     ################ Faltaría tunear los PDI ###############################
 
     pid_ang_pelota.output_limits = (-100, 100)
-    pid_ang_arco.output_limits = (-150, 150)
-
     pid_lin_pelota.output_limits = (-100, 100)
+
+    pid_ang_arco.output_limits = (-100, 100)
+    pid_lin_arco.output_limits = (-100, 100)
 
     pid_ang_pelota.sample_time = 0.2
     pid_lin_pelota.sample_time = 0.2
 
+    pid_ang_arco.sample_time = 0.2
+    pid_lin_arco.sample_time = 0.2
+
 
     while True:
+        theta = 0
+        dist = 0
 
         if modo_de_juego == "pelota":
-
-            if abs(theta_p) < 10 and abs(dist_p) < 20:
-                r1Ar = 0
-                r1Al = 0
-                print("Llego")
-            else:
-                # Control angular
-                control_R = pid_ang_pelota(theta_p)
-                control_L = -pid_ang_pelota(theta_p)
-
-                # Corrección lineal en función del ángulo
-
-                if np.sqrt(abs(theta_p)) < 3:
-                    control_R += pid_lin_pelota(dist_p)
-                    control_L += pid_lin_pelota(dist_p)
-
-
-                # Actualización de la señal PWM
-                r1Ar = control_R
-                r1Al = control_L
-            
-            print("Angulo: " + str(theta_p))
-            print("Distancia: " + str(dist_p))
-            output_queue.put((r1Ar, r1Al))
-
-
-
+            theta = theta_p
+            dist = dist_p
         if modo_de_juego == "arco_m":
-
-            if abs(theta_am) < 10 and abs(dist_am) < 20:
-                r1Ar = 0
-                r1Al = 0
-                print("Llego")
-            else:
-                # Control angular
-                control_R = pid_ang_arco(theta_am)
-                control_L = -pid_ang_arco(theta_am)
-
-                # Corrección lineal en función del ángulo
-                if np.sqrt(abs(theta_am)) < 3:
-                    control_R = pid_lin_arco(dist_am)
-                    control_L = pid_lin_arco(dist_am)
-
-
-                # Actualización de la señal PWM
-                r1Ar = control_R
-                r1Al = control_L
-            
-            print("Angulo: " + str(theta_am))
-            print("Distancia: " + str(dist_am))
-            output_queue.put((r1Ar, r1Al))
-
+            theta = theta_am
+            dist = dist_am
         if modo_de_juego == "centro":
-            if abs(theta_centro) < 10 and abs(dist_centro) < 20:
-                r1Ar = 0
-                r1Al = 0
-                print("Llego")
-            else:
-                # Control angular
-                control_R = pid_ang_pelota(theta_centro)
-                control_L = -pid_ang_pelota(theta_centro)
+            theta = theta_centro
+            dist = dist_centro
+        
+        if abs(theta) < 10 and abs(dist) < 20:
+            r1Ar = 0
+            r1Al = 0
+            print("Llego")
+        else:
+            # Control angular
+            control_R = pid_ang_pelota(theta)
+            control_L = -pid_ang_pelota(theta)
 
-                # Corrección lineal en función del ángulo
+            # Corrección lineal en función del ángulo
 
-                if np.sqrt(abs(theta_centro)) < 3:
-                    control_R += pid_lin_pelota(dist_centro)
-                    control_L += pid_lin_pelota(dist_centro)
-
-                # Ajuste del setpoint de distancia dinámico
-                pid_lin_pelota.setpoint = max(5, dist_centro * 0.5)
-
-                # Actualización de la señal PWM
-                r1Ar = control_R
-                r1Al = control_L
-            
-            print("Angulo: " + str(theta_centro))
-            print("Distancia: " + str(dist_centro))
-            output_queue.put((r1Ar, r1Al))
+            if np.sqrt(abs(theta)) < 3:
+                control_R += pid_lin_pelota(dist)
+                control_L += pid_lin_pelota(dist)
 
 
-
+            # Actualización de la señal PWM
+            r1Ar = control_R
+            r1Al = control_L
+        
+        print("Angulo: " + str(theta))
+        print("Distancia: " + str(dist))
+        output_queue.put((r1Ar, r1Al))
+        
 
         time.sleep(0.2)
 
-
-
-# def procesar_camara():
-#     """Thread para procesar la cámara y enviar comandos al puerto serial."""
-#     global theta, dist, exit_flag, ser, lock, modo_de_juego
-
-#     vid = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-
-#     # Definimos los rangos de los colores
-#     low_g = np.array([40, 100, 100])
-#     high_g = np.array([80, 255, 255])
-
-#     low_orange = np.array([5, 130, 100])
-#     high_orange = np.array([20, 255, 255])
-
-#     low_yellow = np.array([20, 50, 5])
-#     high_yellow = np.array([40, 255, 255])
-
-#     low_pink = np.array([135, 110, 110])
-#     high_pink = np.array([165, 255, 255])
-
-#     low_purple = np.array([135, 5, 20])
-#     high_purple= np.array([165, 130, 130])
-
-#     while not exit_flag:
-#         # Leer frame de la cámara
-#         ret, img = vid.read()
-#         if not ret:
-#             print("No se pudo leer de la cámara.")
-#             break
-
-#         # Procesar colores
-#         centros_naranja = detectar_color(low_orange, high_orange, "naranja", img, "naranja", (255, 255, 255))
-#         centros_amarillo = detectar_color(low_yellow, high_yellow, "yellow", img, "amarillo", (0, 255, 255))
-#         centros_pink = detectar_color(low_pink, high_pink, "pink", img, "pink", (255, 0, 255))
-#         centro_arco_purple = detectar_color(low_purple, high_purple, "purple", img, "morado", (255, 0, 255))
-
-#         # Calcular ángulo y distancia si hay suficientes centros
-#         if centros_amarillo and centros_pink and centros_naranja and centro_arco_purple:
-#             centro_amarillo = centros_amarillo[0]
-#             centro_pink = centros_pink[0]
-#             centro_naranja = centros_naranja[0]
-#             centro_arco_morado = centro_arco_purple[0]
-
-#             # Calcular ángulo
-#             angulo_resultado = calcular_angulo(centro_naranja, centro_pink, centro_amarillo) #Esto puede que esté alreves
-#             angulo_arco = calcular_angulo(centro_naranja, centro_pink, centro_arco_morado)
-#             with lock:
-#                 cv2.line(img, centro_naranja, centro_pink, (0, 0, 0), 2)
-
-#                 if modo_de_juego == "pelota":
-#                     theta = angulo_resultado[0]
-#                     dist = angulo_resultado[1]
-#                     # Dibujar líneas
-#                     cv2.line(img, centro_naranja, centro_amarillo, (0, 0, 0), 2)
-#                     print("funcionando pelota")
-
-
-#                 elif modo_de_juego == "arco_m":
-#                     theta = angulo_arco[0]
-#                     dist = angulo_arco[1]
-#                     cv2.line(img, centro_naranja, centro_arco_morado, (0, 0, 0), 2)
-#                     print("funcionando arco")
-
-
-
-
-
-#         else:
-#             print("No se encontraron centros suficientes para calcular el ángulo.")
-
-#         # Mostrar imagen procesada
-#         cv2.imshow('original', img)
-
-#         # Leer valores de la cola y enviar comandos
-#         if not output_queue.empty():
-#             r1Ar, r1Al = output_queue.get()
-#             mensaje_a = f"A{int(r1Ar)};"
-#             mensaje_b = f"B{int(r1Al)};"
-#             ser.write(mensaje_a.encode())
-#             ser.write(mensaje_b.encode())
-#             print(f"Enviado al Motor A: {mensaje_a}")
-#             print(f"Enviado al Motor B: {mensaje_b}")
-
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             exit_flag = True
-#             break
-
-#     vid.release()
-#     cv2.destroyAllWindows()
 
 
 def procesar_camara():
@@ -401,7 +221,7 @@ def procesar_camara():
 
 
 
-    modo_de_juego = "pelota" #Cambiar directamente esta linea para cambiar el modo por ahora. Es más seguro de que funcione
+    modo_de_juego = "arco_m" #Cambiar directamente esta linea para cambiar el modo por ahora. Es más seguro de que funcione
 
     while True:
         # Leer frame de la cámara
