@@ -9,7 +9,7 @@ camera_thread = threading.Thread(target=procesar_camara)
 input_thread = threading.Thread(target=gestionar_inputs)
 
 # Iniciar threads
-control_thread.start()
+control_thread.start() 
 camera_thread.start()
 input_thread.start()
 

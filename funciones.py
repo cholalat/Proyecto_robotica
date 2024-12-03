@@ -119,8 +119,8 @@ def start():
 	# dit: distancia robot-pelota
 	# theta: angulo robot-pelota
 
-    pid_ang_pelota = PID(2, 0.002, 0, setpoint=0)
-    pid_lin_pelota = PID(0, 0, 0, setpoint=20)
+    pid_ang_pelota = PID(2.5, 0.03, 0.15, setpoint=0)
+    pid_lin_pelota = PID(1.5, 0, 0, setpoint=20)
 
     pid_ang_arco = PID(2, 0.02, 0.1, setpoint=0)
     pid_lin_arco = PID(5, 0.3, 0.05, setpoint=20)
@@ -152,12 +152,12 @@ def start():
 
                 # Corrección lineal en función del ángulo
 
-                if np.sqrt(abs(theta_p)) < 3:
-                    control_R += pid_lin_pelota(dist_p)
-                    control_L += pid_lin_pelota(dist_p)
+                # if np.sqrt(abs(theta_p)) < 3:
+                #     control_R = pid_lin_pelota(dist_p)
+                #     control_L = pid_lin_pelota(dist_p)
 
-                # Ajuste del setpoint de distancia dinámico
-                pid_lin_pelota.setpoint = max(5, dist_p * 0.5)
+                # # Ajuste del setpoint de distancia dinámico
+                # pid_lin_pelota.setpoint = max(5, dist_p * 0.5)
 
                 # Actualización de la señal PWM
                 r1Ar = control_R
@@ -226,7 +226,7 @@ def start():
 
 
 
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 
 

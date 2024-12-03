@@ -81,7 +81,6 @@ def detectar_color(low_color, high_color, color_name, img, nombre, color_caja=(0
 
 
 def start(theta, dist):
-    global e_ang, e_lin
     # Se reinicia el PID cada vez que se cambia de modo de juego
 
     if abs(theta) < 10 and abs(dist) < 20:
@@ -91,7 +90,7 @@ def start(theta, dist):
 
     else:
         # Control angular
-        u_ang, e_ang = pid_controler(mesure=theta, setpoint=0, kp=0.5, ki=0, kd=0, error= e_ang, dt= 0.5)
+        u_ang, e_ang = pid_controler(e_ang, mesure=theta, setpoint=0, kp=0.5, ki=0, kd=0, dt= 0.1)
         u_ang = max(-150, min(150, u_ang))
         
         control_R =  u_ang
@@ -101,12 +100,12 @@ def start(theta, dist):
 
 
 
-        if np.sqrt(abs(theta)) < 3:
-            u_lin, e_lin = pid_controler(mesure=dist, setpoint=20, kp=0.5, ki=0, kd=0, error= e_lin, dt= 0.5)
-            u_lin = max(-150, min(150, u_lin))
+        # if np.sqrt(abs(theta)) < 3:
+        #     u_lin, e_lin = pid_controler(mesure=dist, setpoint=20, kp=0.5, ki=0, kd=0, error= e_lin, dt= 0.1)
+        #     u_lin = max(-150, min(150, u_lin))
             
-            control_R += u_lin
-            control_L += u_lin
+        #     control_R += u_lin
+        #     control_L += u_lin
 
 
 
@@ -349,11 +348,14 @@ def kick_ball_to_goal():
     pass
 
 
-def pid_controler(mesure, setpoint=0, kp=1, ki=0, kd=0, dt=0.1, error=[]):
+def pid_controler(error, mesure, setpoint=0, kp=1, ki=0, kd=0, dt=0.1):
     """
     Función de control PID, que recibe una variable a controlar (mesure) y un setpoint al que
     se quiere llegar. En la que los coeficientes (kp, ki, kd) son independientes entre sí.
     """
+    if error is ValueError:
+        error =[]
+
     # Gestion lista de errores
     error.append(setpoint - mesure)
     if len(error) > 10:
