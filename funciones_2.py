@@ -7,6 +7,8 @@ from simple_pid import PID
 from queue import Queue
 import math
 
+e_ang = []
+e_lin = []
 
 ser = serial.Serial("COM3", baudrate=38400, timeout=1)
 time.sleep(2)  # Tiempo para establecer la conexión
@@ -79,9 +81,9 @@ def detectar_color(low_color, high_color, color_name, img, nombre, color_caja=(0
 
 
 def start(theta, dist):
+    global e_ang, e_lin
     # Se reinicia el PID cada vez que se cambia de modo de juego
-    e_ang = []
-    e_lin = []
+
     if abs(theta) < 10 and abs(dist) < 20:
         control_R = 0
         control_L = 0
@@ -89,7 +91,7 @@ def start(theta, dist):
 
     else:
         # Control angular
-        u_ang, e_ang = pid_controler(mesure=theta, setpoint=0, kp=1.8, ki=0.02, kd=0.1, error= e_ang, dt= 0.5)
+        u_ang, e_ang = pid_controler(mesure=theta, setpoint=0, kp=0.5, ki=0, kd=0, error= e_ang, dt= 0.5)
         u_ang = max(-150, min(150, u_ang))
         
         control_R =  u_ang
@@ -97,12 +99,16 @@ def start(theta, dist):
 
         # Corrección lineal en función del ángulo
 
+
+
         if np.sqrt(abs(theta)) < 3:
-            u_lin, e_lin = pid_controler(mesure=dist, setpoint=20, kp=1.5, ki=0, kd=0, error= e_lin, dt= 0.5)
+            u_lin, e_lin = pid_controler(mesure=dist, setpoint=20, kp=0.5, ki=0, kd=0, error= e_lin, dt= 0.5)
             u_lin = max(-150, min(150, u_lin))
             
             control_R += u_lin
             control_L += u_lin
+
+
 
         # Ajuste del setpoint de distancia dinámico
         # PID_lin.setpoint = max(5, dist * 0.5)
@@ -148,18 +154,16 @@ def control():
     low_purple = np.array([135, 5, 20])
     high_purple= np.array([165, 130, 130])
 
-    low_blue = np.array([110, 100, 100])
+    low_blue = np.array([110, 10, 30])
     high_blue = np.array([130, 255, 255])
 
     """Colocamos esta deteccion de color fuera del while ya que solo nos interesa calcularla 1 vez para saber dónde estan los arcos,
     pero en realidad sólo nos interesa hacerlo una pura vez. De esta forma no corremos el riesgo que al tapar el arco o al haber alguien
     con el mismo color del arco que se pierda la posición de este."""
 
-    centros_purple = detectar_color(low_purple, high_purple, "purple", img, "morado", (255, 0, 255))
-    centros_blue = detectar_color(low_blue, high_blue, "blue", img, "azul", (50, 255, 50))
 
-    centro_arco_morado = centros_purple[0]
-    centro_arco_azul = centros_blue[0]
+
+
 
     modo_de_juego = "pelota" #Cambiar directamente esta linea para cambiar el modo por ahora. Es más seguro de que funcione
     modo_de_juego_anterior = modo_de_juego
@@ -177,14 +181,16 @@ def control():
         centros_naranja = detectar_color(low_orange, high_orange, "naranja", img, "naranja", (255, 255, 255))
         centros_amarillo = detectar_color(low_yellow, high_yellow, "yellow", img, "amarillo", (0, 255, 255))
         centros_pink = detectar_color(low_pink, high_pink, "pink", img, "pink", (255, 0, 255))
-
+        centros_purple = detectar_color(low_purple, high_purple, "purple", img, "morado", (255, 0, 255))
+        centros_blue = detectar_color(low_blue, high_blue, "blue", img, "azul", (50, 255, 50))
 
         # Calcular ángulo y distancia si hay suficientes centros
         if centros_amarillo and centros_pink and centros_naranja:
             centro_amarillo = centros_amarillo[0]
             centro_pink = centros_pink[0]
             centro_naranja = centros_naranja[0]
-
+            centro_arco_morado = centros_purple[0]
+            centro_arco_azul = centros_blue[0]
 
 
             # if centro_amarillo[0] > centro_naranja[0]:
@@ -309,7 +315,6 @@ def control():
         thread1_done.set()
 
         # Esperar a que Thread 2 termine antes de iniciar el siguiente ciclo
-        thread2_done.wait()
         thread2_done.clear()
     vid.release()
     cv2.destroyAllWindows()
@@ -321,7 +326,6 @@ def gestionar_inputs():
 
     while True:
         thread1_done.wait()
-        thread1_done.clear()
 
         user_input = input("Ingresa un comando: ")
         modo_de_juego = user_input
