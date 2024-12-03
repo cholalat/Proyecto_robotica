@@ -118,27 +118,19 @@ def start():
     global output_queue
 
 
-    pid_ang_pelota = PID(2.3, 0.01, 0, setpoint=0)
-    pid_lin_pelota = PID(1.5, 0, 0, setpoint=20)
-
-    pid_ang_arco = PID(1.8, 0.02, 0, setpoint=0)
-    pid_lin_arco = PID(1.5, 0, 0, setpoint=20)
+    pid_ang = PID(2.3, 0.01, 0, setpoint=0)
+    pid_lin = PID(1.5, 0, 0, setpoint=20)
 
 
 
     ################ Faltaría tunear los PDI ###############################
 
-    pid_ang_pelota.output_limits = (-100, 100)
-    pid_lin_pelota.output_limits = (-100, 100)
+    pid_ang.output_limits = (-100, 100)
+    pid_lin.output_limits = (-100, 100)
 
-    pid_ang_arco.output_limits = (-100, 100)
-    pid_lin_arco.output_limits = (-100, 100)
+    pid_ang.sample_time = 0.2
+    pid_lin.sample_time = 0.2
 
-    pid_ang_pelota.sample_time = 0.2
-    pid_lin_pelota.sample_time = 0.2
-
-    pid_ang_arco.sample_time = 0.2
-    pid_lin_arco.sample_time = 0.2
 
 
     while True:
@@ -155,30 +147,8 @@ def start():
             theta = theta_centro
             dist = dist_centro
         
-        if abs(theta) < 10 and abs(dist) < 20:
-            r1Ar = 0
-            r1Al = 0
-            print("Llego")
-        else:
-            # Control angular
-            control_R = pid_ang_pelota(theta)
-            control_L = -pid_ang_pelota(theta)
-
-            # Corrección lineal en función del ángulo
-
-            if np.sqrt(abs(theta)) < 3:
-                control_R += pid_lin_pelota(dist)
-                control_L += pid_lin_pelota(dist)
 
 
-            # Actualización de la señal PWM
-            r1Ar = control_R
-            r1Al = control_L
-        
-        print("Angulo: " + str(theta))
-        print("Distancia: " + str(dist))
-        output_queue.put((r1Ar, r1Al))
-        
 
         time.sleep(0.2)
 
@@ -312,3 +282,34 @@ def gestionar_inputs():
         modo_de_juego = user_input
             
         # Aquí puedes procesar otros comandos si es necesario
+
+
+def objetivo(theta, dist, pid_ang, pid_lin, funcion_final):
+        if abs(theta) < 10 and abs(dist) < 20:
+            r1Ar = 0
+            r1Al = 0
+            funcion_final
+        else:
+            # Control angular
+            control_R = pid_ang(theta)
+            control_L = -pid_ang(theta)
+
+            # Corrección lineal en función del ángulo
+
+            if np.sqrt(abs(theta)) < 3:
+                control_R += pid_lin(dist)
+                control_L += pid_lin(dist)
+
+
+            # Actualización de la señal PWM
+            r1Ar = control_R
+            r1Al = control_L
+        
+        print("Angulo: " + str(theta))
+        print("Distancia: " + str(dist))
+        output_queue.put((r1Ar, r1Al))
+
+
+objetivo(theta_p, dist_p, pid_ang, pid_lin, objetivo(theta_am, dist_am, pid_ang, pid_lin, print("GOAL")))
+
+
