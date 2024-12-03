@@ -33,11 +33,13 @@ output_queue = Queue()
 ancho = 0
 alto = 0
 
+
+
 def calcular_angulo(p1, p2, p3):
     angle1 = math.degrees(math.atan2(p1[1] - p2[1], p1[0] - p2[0]))
     angle2 = math.degrees(math.atan2(p1[1] - p3[1], p1[0] - p3[0]))
 
-    theta = round(angle1 - angle2, 2)
+    theta = angle1 - angle2
     
     # Descomponemos los puntos en coordenadas
     x1, y1 = p1
@@ -50,6 +52,8 @@ def calcular_angulo(p1, p2, p3):
     c = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)  # Distancia entre cosas del robot
 
     return (theta, a, b, c)
+
+
 
 
 def detectar_color(low_color, high_color, color_name, img, nombre, color_caja=(0, 0, 0)):
@@ -162,22 +166,23 @@ def start():
 	# dit: distancia robot-pelota
 	# theta: angulo robot-pelota
 
-    pid_ang_pelota = PID(1.8, 0.02, 0.1, setpoint=0)
+    pid_ang_pelota = PID(1.8, 0.02, 0, setpoint=0)
     pid_lin_pelota = PID(1.5, 0, 0, setpoint=20)
 
-    pid_ang_arco = PID(2, 0.02, 0.1, setpoint=0)
-    pid_lin_arco = PID(5, 0.3, 0.05, setpoint=20)
+    pid_ang_arco = PID(1.8, 0.02, 0, setpoint=0)
+    pid_lin_arco = PID(1.5, 0, 0, setpoint=20)
 
 
 
     ################ Faltaría tunear los PDI ###############################
 
-    pid_ang_pelota.output_limits = (-150, 150)
+    pid_ang_pelota.output_limits = (-100, 100)
     pid_ang_arco.output_limits = (-150, 150)
 
-    pid_lin_pelota.output_limits = (-150, 150)
+    pid_lin_pelota.output_limits = (-100, 100)
 
-
+    pid_ang_pelota.sample_time = 0.2
+    pid_lin_pelota.sample_time = 0.2
 
 
     while True:
@@ -199,8 +204,6 @@ def start():
                     control_R += pid_lin_pelota(dist_p)
                     control_L += pid_lin_pelota(dist_p)
 
-                # Ajuste del setpoint de distancia dinámico
-                pid_lin_pelota.setpoint = max(5, dist_p * 0.5)
 
                 # Actualización de la señal PWM
                 r1Ar = control_R
@@ -224,12 +227,10 @@ def start():
                 control_L = -pid_ang_arco(theta_am)
 
                 # Corrección lineal en función del ángulo
-                # if np.sqrt(abs(theta_am)) < 3:
-                #     control_R = -pid_lin_arco(dist_am)
-                #     control_L = -pid_lin_arco(dist_am)
+                if np.sqrt(abs(theta_am)) < 3:
+                    control_R = pid_lin_arco(dist_am)
+                    control_L = pid_lin_arco(dist_am)
 
-                # Ajuste del setpoint de distancia dinámico
-                pid_lin_arco.setpoint = max(5, dist_am * 0.5)
 
                 # Actualización de la señal PWM
                 r1Ar = control_R
@@ -269,7 +270,7 @@ def start():
 
 
 
-        time.sleep(0.1)
+        time.sleep(0.2)
 
 
 
