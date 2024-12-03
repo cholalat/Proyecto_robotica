@@ -125,6 +125,12 @@ def start():
     pid_ang_arco = PID(2, 0.02, 0.1, setpoint=0)
     pid_lin_arco = PID(5, 0.3, 0.05, setpoint=20)
 
+    # sampe time
+    pid_ang_pelota.sample_time = 0.1
+    pid_lin_pelota.sample_time = 0.1
+    
+    pid_ang_arco.sample_time = 0.1
+    pid_lin_arco.sample_time = 0.1 
 
 
     ################ Faltaría tunear los PDI ###############################
@@ -226,7 +232,7 @@ def start():
 
 
 
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 
 
