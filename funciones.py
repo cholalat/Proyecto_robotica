@@ -131,8 +131,6 @@ def start():
     pid_ang.sample_time = 0.2
     pid_lin.sample_time = 0.2
 
-
-
     while True:
         theta = 0
         dist = 0
@@ -146,9 +144,24 @@ def start():
         if modo_de_juego == "centro":
             theta = theta_centro
             dist = dist_centro
-        
 
+        if modo_de_juego == "goal":
+            theta1 = theta_p
+            dist1 = dist_p
+            theta2 = theta_am
+            dist2 = dist_am
+            
+        if modo_de_juego == "pelota" or modo_de_juego == "arco_m" or modo_de_juego == "centro":
+            objetivo(theta, dist, pid_ang, pid_lin, 
+                     lambda: print("LLego")
+                     )
 
+        elif modo_de_juego == "goal":
+            objetivo(theta1, dist1, pid_ang, pid_lin, 
+                     lambda: objetivo(theta2, dist2, pid_ang, pid_lin, 
+                                      lambda: print("Objetivo alcanzado: centro")
+                                      )
+                     )
 
         time.sleep(0.2)
 
@@ -282,34 +295,52 @@ def gestionar_inputs():
         modo_de_juego = user_input
             
         # Aquí puedes procesar otros comandos si es necesario
-
+        
+def pid_controler(mesure, setpoint=0, kp=1, ki=0, kd=0, dt=0.1, error=[]):
+    """
+    Función de control PID, que recibe una variable a controlar (mesure) y un setpoint al que
+    se quiere llegar. En la que los coeficientes (kp, ki, kd) son independientes entre sí.
+    """
+    # Calculamos el error actual y lo agregamos a la lista de errores
+    error.append(setpoint - mesure)
+    
+    # Limitamos la cantidad de errores almacenados
+    if len(error) > 10:
+        error.pop(0)
+    
+    P = kp * error[-1]
+    I = ki * sum(error) * dt
+    if len(error) > 1:
+        D = kd * (error[-1] - error[-2]) / dt 
+    else:
+        D = 0
+        
+    u = P + I + D
+    
+    return u, error
 
 def objetivo(theta, dist, pid_ang, pid_lin, funcion_final):
-        if abs(theta) < 10 and abs(dist) < 20:
-            r1Ar = 0
-            r1Al = 0
-            funcion_final
-        else:
-            # Control angular
-            control_R = pid_ang(theta)
-            control_L = -pid_ang(theta)
+    global r1Ar, r1Al
 
-            # Corrección lineal en función del ángulo
+    # Verificar si el robot ha alcanzado el objetivo
+    if abs(theta) < 10 and abs(dist) < 20:
+        r1Ar = 0
+        r1Al = 0
+        funcion_final()  # Ejecutar la función final
+    else:
+        # Control angular
+        control_R = pid_ang(theta)
+        control_L = -pid_ang(theta)
 
-            if np.sqrt(abs(theta)) < 3:
-                control_R += pid_lin(dist)
-                control_L += pid_lin(dist)
+        # Corrección lineal si el ángulo es pequeño
+        if abs(theta) < 3:
+            control_R += pid_lin(dist)
+            control_L += pid_lin(dist)
 
+        # Actualización de las señales PWM
+        r1Ar = int(max(min(control_R, 100), -100))  # Limitar a rango de -100 a 100
+        r1Al = int(max(min(control_L, 100), -100))
 
-            # Actualización de la señal PWM
-            r1Ar = control_R
-            r1Al = control_L
-        
-        print("Angulo: " + str(theta))
-        print("Distancia: " + str(dist))
-        output_queue.put((r1Ar, r1Al))
-
-
-objetivo(theta_p, dist_p, pid_ang, pid_lin, objetivo(theta_am, dist_am, pid_ang, pid_lin, print("GOAL")))
-
-
+    print(f"Ángulo: {theta}, Distancia: {dist}")
+    output_queue.put((r1Ar, r1Al))
+    
