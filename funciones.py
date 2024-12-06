@@ -118,7 +118,7 @@ def start():
     global output_queue
 
 
-    pid_ang = PID(2.3, 0.01, 0, setpoint=0)
+    pid_ang = PID(1.8, 0, 0, setpoint=0)
     pid_lin = PID(1.5, 0, 0, setpoint=20)
 
 
@@ -159,8 +159,8 @@ def start():
         elif modo_de_juego == "goal":
             objetivo(theta1, dist1, pid_ang, pid_lin, 
                      lambda: objetivo(theta2, dist2, pid_ang, pid_lin, 
-                                      lambda: print("Objetivo alcanzado: centro")
-                                      )
+                                      lambda: print("Objetivo alcanzado: centro"), nombre="arco"
+                                      ), nombre="pelota"
                      )
 
         time.sleep(0.2)
@@ -182,7 +182,7 @@ def procesar_camara():
     global theta_centro
     global dist_centro
 
-    vid = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     ancho = 600
     alto = 500
 
@@ -204,7 +204,7 @@ def procesar_camara():
 
 
 
-    modo_de_juego = "arco_m" #Cambiar directamente esta linea para cambiar el modo por ahora. Es más seguro de que funcione
+    modo_de_juego = "pelota" #Cambiar directamente esta linea para cambiar el modo por ahora. Es más seguro de que funcione
 
     while True:
         # Leer frame de la cámara
@@ -319,13 +319,13 @@ def pid_controler(mesure, setpoint=0, kp=1, ki=0, kd=0, dt=0.1, error=[]):
     
     return u, error
 
-def objetivo(theta, dist, pid_ang, pid_lin, funcion_final):
+def objetivo(theta, dist, pid_ang, pid_lin, funcion_final, nombre = ""):
     global r1Ar, r1Al
 
     # Verificar si el robot ha alcanzado el objetivo
     if abs(theta) < 10 and abs(dist) < 20:
-        r1Ar = 0
-        r1Al = 0
+        # r1Ar = 0
+        # r1Al = 0
         funcion_final()  # Ejecutar la función final
     else:
         # Control angular
@@ -333,14 +333,15 @@ def objetivo(theta, dist, pid_ang, pid_lin, funcion_final):
         control_L = -pid_ang(theta)
 
         # Corrección lineal si el ángulo es pequeño
-        if abs(theta) < 3:
+        if abs(theta) <= 5:
             control_R += pid_lin(dist)
             control_L += pid_lin(dist)
 
         # Actualización de las señales PWM
-        r1Ar = int(max(min(control_R, 100), -100))  # Limitar a rango de -100 a 100
-        r1Al = int(max(min(control_L, 100), -100))
+        r1Ar = control_R # Limitar a rango de -100 a 100
+        r1Al = control_L
 
     print(f"Ángulo: {theta}, Distancia: {dist}")
     output_queue.put((r1Ar, r1Al))
+    print(nombre)
     
