@@ -210,10 +210,10 @@ def procesar_camara():
 
     modo_de_juego = "pelota" #Cambiar directamente esta linea para cambiar el modo por ahora. Es más seguro de que funcione
 
-    pid_ang = PID(1.5, 0.001, 0.005, setpoint=0)
+    pid_ang = PID(1.5, 0.001, 0.05, setpoint=0)
     pid_lin = PID(1.5, 0, 0, setpoint=20)
 
-    pid_ang_2 = PID(0.5, 0.001, 0.005, setpoint=0)
+    pid_ang_2 = PID(0.5, 0.01, 0.1, setpoint=0)
 
     ################ Faltaría tunear los PDI ###############################
 
@@ -267,7 +267,7 @@ def procesar_camara():
             theta_p = angulo_pelota[0]
             dist_p = angulo_pelota[1]
 
-            theta_am = angulo_arco_m[0]
+            theta_am = -angulo_arco_m[0]
             dist_am = angulo_arco_m[1]
 
             theta_centro = angulo_centro[0]
@@ -303,8 +303,8 @@ def procesar_camara():
 
             else:
 
-                objetivo(theta_p, dist_p, pid_ang, pid_lin, 
-                        lambda: objetivo(theta_am, dist_am, pid_ang_2, pid_lin, 
+                objetivo(theta_p, dist_p, pid_ang_2, pid_lin, 
+                        objetivo(theta_am, dist_am, pid_ang_2, pid_lin, 
                                         lambda: print("Objetivo alcanzado: centro"), nombre="arco"
                                         ), nombre="pelota", tolerancia=7
                         )
