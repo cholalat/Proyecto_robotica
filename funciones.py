@@ -152,7 +152,10 @@ def start():
             dist1 = dist_p
             theta2 = theta_am
             dist2 = dist_am
-            
+        
+        if 
+
+
         if modo_de_juego == "pelota" or modo_de_juego == "arco_m" or modo_de_juego == "centro":
             objetivo(theta, dist, pid_ang, pid_lin, 
                      lambda: print("LLego")
