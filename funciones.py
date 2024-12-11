@@ -121,7 +121,7 @@ def start():
     pid_ang = PID(1.8, 0, 0, setpoint=0)
     pid_lin = PID(1.5, 0, 0, setpoint=20)
 
-
+    pid_ang_2 = PID(0.5, 0, 0, setpoint=0)
 
     ################ Faltaría tunear los PDI ###############################
 
@@ -130,6 +130,8 @@ def start():
 
     pid_ang.sample_time = 0.2
     pid_lin.sample_time = 0.2
+
+    pid_ang_2.sample_time = 0.2
 
     while True:
         theta = 0
@@ -150,7 +152,10 @@ def start():
             dist1 = dist_p
             theta2 = theta_am
             dist2 = dist_am
-            
+        
+        if 
+
+
         if modo_de_juego == "pelota" or modo_de_juego == "arco_m" or modo_de_juego == "centro":
             objetivo(theta, dist, pid_ang, pid_lin, 
                      lambda: print("LLego")
@@ -158,7 +163,7 @@ def start():
 
         elif modo_de_juego == "goal":
             objetivo(theta1, dist1, pid_ang, pid_lin, 
-                     lambda: objetivo(theta2, dist2, pid_ang, pid_lin, 
+                     lambda: objetivo(theta2, dist2, pid_ang_2, pid_lin, 
                                       lambda: print("Objetivo alcanzado: centro"), nombre="arco"
                                       ), nombre="pelota"
                      )
@@ -323,7 +328,7 @@ def objetivo(theta, dist, pid_ang, pid_lin, funcion_final, nombre = ""):
     global r1Ar, r1Al
 
     # Verificar si el robot ha alcanzado el objetivo
-    if abs(theta) < 10 and abs(dist) < 20:
+    if abs(dist) < 25:
         # r1Ar = 0
         # r1Al = 0
         funcion_final()  # Ejecutar la función final
